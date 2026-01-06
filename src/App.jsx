@@ -210,7 +210,7 @@ const App = () => {
     setError(null);
     const apiKey = "06875d4e89msh93bade49ef61868p18bb4ajsnf9fb21cbf614"; 
     try {
-      const response = await fetch(`https://european-lottery-api.p.rapidapi.com/${currentData.code}/latest`, {
+      const response = await fetch(`https://european-lottery-api.p.rapidapi.com/ES_ES_RJ/latest`, {
         method: 'GET',
         headers: { 'X-RapidAPI-Host': 'european-lottery-api.p.rapidapi.com', 'X-RapidAPI-Key': apiKey }
       });
@@ -398,26 +398,77 @@ const App = () => {
       </main>
 
       <footer className="bg-[#E8F8F5] text-slate-600 py-12 px-6 mt-auto border-t border-slate-200">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12 mb-8">
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <div className="flex items-center">
-                <span style={{ color: googleColors.blue }} className="text-2xl font-black">A</span>
-                <span style={{ color: googleColors.red }} className="text-2xl font-black">P</span>
-                <span style={{ color: googleColors.yellow }} className="text-2xl font-black">P</span>
-                <span style={{ color: googleColors.green }} className="text-2xl font-black">I</span>
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
+            
+            {/* Column 1: Brand & Identity */}
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <div className="flex items-center">
+                  <span style={{ color: googleColors.blue }} className="text-2xl font-black">A</span>
+                  <span style={{ color: googleColors.red }} className="text-2xl font-black">P</span>
+                  <span style={{ color: googleColors.yellow }} className="text-2xl font-black">P</span>
+                  <span style={{ color: googleColors.green }} className="text-2xl font-black">I</span>
+                </div>
+                <span className="text-slate-600 font-bold text-lg">Lotteries</span>
               </div>
-              <span className="text-slate-600 font-bold text-lg">Lotteries</span>
+              <p className="text-xs text-slate-500 font-medium">Dublin based pattern analysis for the European markets.</p>
+              <div className="pt-2">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Security Verified</p>
+                <p className="text-[10px] text-slate-500">Zero Data Collection: Your session is anonymous.</p>
+              </div>
             </div>
-            <p className="text-xs text-slate-500">Dublin based pattern analysis for the European markets.</p>
+
+            {/* Column 2: Legal & Policies */}
+            <div>
+              <h4 className="text-slate-900 font-bold mb-4 text-xs uppercase tracking-wider">Compliance & Safety</h4>
+              <ul className="text-[11px] space-y-3 font-semibold">
+                <li><a href="/privacy.html" target="_blank" className="underline hover:text-blue-600">Privacy Policy</a></li>
+                <li><a href="/terms.html" target="_blank" className="underline hover:text-blue-600">Terms of Service</a></li>
+                <li className="text-red-600 font-bold italic underline cursor-pointer" onClick={() => window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'})}>Responsible Play Resources Below</li>
+              </ul>
+            </div>
+
+            {/* Column 3: Quick Links or Meta */}
+            <div>
+              <h4 className="text-slate-900 font-bold mb-4 text-xs uppercase tracking-wider">Contact</h4>
+              <p className="text-[11px] font-medium text-slate-600">Dublin, Ireland</p>
+              <p className="text-[11px] font-medium text-slate-500 mt-2">© 2025-2026 APPI Lotteries</p>
+            </div>
           </div>
-          <div>
-            <h4 className="text-slate-900 font-bold mb-4 text-xs uppercase">Compliance & Safety</h4>
-            <ul className="text-[10px] space-y-2 font-medium">
-              <li className="cursor-pointer underline hover:text-blue-600" onClick={() => openPolicyInNewWindow('privacy')}>Privacy Policy</li>
-              <li className="cursor-pointer underline hover:text-blue-600" onClick={() => openPolicyInNewWindow('terms')}>Terms of Service</li>
-              <li className="cursor-pointer underline hover:text-blue-600" onClick={() => openPolicyInNewWindow('cookies')}>Cookies Policy</li>
-            </ul>
+
+          {/* Responsible Gambling Resource Section - The Irish Support List */}
+          <div className="border-t border-slate-300 pt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="space-y-2">
+              <h5 className="text-slate-900 font-bold text-[11px] uppercase">Ireland Support</h5>
+              <div className="text-[11px] leading-relaxed">
+                <p className="font-bold">Problem Gambling Ireland</p>
+                <p>Visit: <a href="https://www.problemgambling.ie" target="_blank" className="text-blue-600 underline">www.problemgambling.ie</a></p>
+                <p>Support: 089 241 5401</p>
+              </div>
+              <div className="text-[11px] leading-relaxed pt-2">
+                <p className="font-bold">Gamblers Anonymous</p>
+                <p>Visit: <a href="https://www.gamblersanonymous.ie" target="_blank" className="text-blue-600 underline">www.gamblersanonymous.ie</a></p>
+                <p>Support: 01 872 1133</p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <h5 className="text-slate-900 font-bold text-[11px] uppercase">Treatment Centre</h5>
+              <div className="text-[11px] leading-relaxed">
+                <p className="font-bold">The Rutland Centre</p>
+                <p>Visit: <a href="https://www.rutlandcentre.ie" target="_blank" className="text-blue-600 underline">www.rutlandcentre.ie</a></p>
+                <p>Call: 1800 446 677</p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <h5 className="text-slate-900 font-bold text-[11px] uppercase">Blocking Software</h5>
+              <div className="text-[11px] leading-relaxed">
+                <p className="font-bold">Net Nanny: <span className="font-normal">www.netnanny.com</span></p>
+                <p className="font-bold">Gamban: <span className="font-normal">www.gamban.com</span></p>
+              </div>
+            </div>
           </div>
         </div>
       </footer>
