@@ -201,39 +201,78 @@ const App = () => {
     return lines;
   }, [currentData]);
 
-  // --- SYNC ENGINE ---
+const calculateLottoStats = (drawHistory, mainCount = 5) => {
+  if (!drawHistory || !Array.isArray(drawHistory)) return { hot: [], cold: [], overdue: [] };
+  const frequencyMap = {};
+  const lastSeenMap = {};
+
+  drawHistory.forEach((draw, index) => {
+    draw.results.forEach(num => {
+      frequencyMap[num] = (frequencyMap[num] || 0) + 1;
+      if (lastSeenMap[num] === undefined) lastSeenMap[num] = index;
+    });
+  });
+
+  const sortedByFreq = Object.keys(frequencyMap).sort((a, b) => frequencyMap[b] - frequencyMap[a]);
+  return {
+    hot: sortedByFreq.slice(0, mainCount),
+    cold: sortedByFreq.slice(-mainCount).reverse(),
+    overdue: Object.keys(lastSeenMap).sort((a, b) => lastSeenMap[b] - lastSeenMap[a]).slice(0, mainCount)
+  };
+};
+
   const syncLiveStats = useCallback(async (force = false) => {
-    if (syncInProgress.current) return;
-    if (!force && syncedMarkets.current.has(selectedLotto)) return;
-    syncInProgress.current = true;
-    setIsSyncing(true);
-    setError(null);
-    const apiKey = "06875d4e89msh93bade49ef61868p18bb4ajsnf9fb21cbf614"; 
-    try {
-      const response = await fetch(`https://european-lottery-api.p.rapidapi.com/ES_ES_RJ/latest`, {
-        method: 'GET',
-        headers: { 'X-RapidAPI-Host': 'european-lottery-api.p.rapidapi.com', 'X-RapidAPI-Key': apiKey }
-      });
-      if (response.status === 429) throw new Error("API Limit Reached.");
-      const apiResult = await response.json();
-      if (apiResult && apiResult.results) {
+  if (syncInProgress.current) return;
+  if (!force && syncedMarkets.current.has(selectedLotto)) return;
+
+  syncInProgress.current = true;
+  setIsSyncing(true);
+  setError(null);
+
+  const apiKey = "06875d4e89msh93bade49ef61868p18bb4ajsnf9fb21cbf614"; 
+  const headers = { 'X-RapidAPI-Host': 'european-lottery-api.p.rapidapi.com', 'X-RapidAPI-Key': apiKey };
+
+  try {
+    // 1. Get List of Dates to find the TRUE latest draw
+    const datesRes = await fetch(`https://european-lottery-api.p.rapidapi.com/${selectedLotto}/dates`, { headers });
+    const dates = await datesRes.json();
+
+    if (dates && dates.length > 0) {
+      const realLatestDate = dates[0];
+
+      // 2. Fetch specific results (Bypassing the stuck /latest cache)
+      const drawRes = await fetch(`https://european-lottery-api.p.rapidapi.com/${selectedLotto}/draw/${realLatestDate}`, { headers });
+      const drawData = await drawRes.json();
+
+      // 3. Get History for Hot/Cold stats
+      const historyRes = await fetch(`https://european-lottery-api.p.rapidapi.com/${selectedLotto}/results?limit=50`, { headers });
+      const historyData = await historyRes.json();
+      
+      const stats = calculateLottoStats(historyData, currentData.mainCount);
+
+      if (drawData && drawData.results) {
         setLottoData(prev => ({
           ...prev,
           [selectedLotto]: {
             ...prev[selectedLotto],
-            mostDrawn: apiResult.results.slice(0, currentData.mainCount), 
-            extraResults: apiResult.additional || apiResult.results.slice(currentData.mainCount),
-            lastDrawDate: apiResult.date || 'Verified'
+            mostDrawn: drawData.results.slice(0, currentData.mainCount),
+            extraResults: drawData.results.slice(currentData.mainCount),
+            lastDrawDate: drawData.date,
+            hotNumbers: stats.hot,
+            coldNumbers: stats.cold,
+            overdueNumbers: stats.overdue
           }
         }));
         syncedMarkets.current.add(selectedLotto);
       }
-      setLastUpdated(new Date().toLocaleTimeString());
-    } catch (err) { setError(err.message); }
-    finally {
-      setTimeout(() => { setIsSyncing(false); syncInProgress.current = false; }, 1000);
     }
-  }, [selectedLotto, currentData]);
+    setLastUpdated(new Date().toLocaleTimeString());
+  } catch (err) { 
+    setError(err.message); 
+  } finally {
+    setTimeout(() => { setIsSyncing(false); syncInProgress.current = false; }, 1000);
+  }
+}, [selectedLotto, currentData]);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
