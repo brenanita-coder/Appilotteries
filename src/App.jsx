@@ -107,7 +107,7 @@ const INITIAL_LOTTO_DATA = {
   'La Primitiva': {
     name: 'Spanish Lotto',
     sub: 'Spain',
-    code: 'ES_ES_RJ',
+    code: 'EU_EU_EM',
     jackpot: '€13,500,000',
     range: 49,
     mainCount: 6,
@@ -233,41 +233,34 @@ const calculateLottoStats = (drawHistory, mainCount = 5) => {
   const headers = { 'X-RapidAPI-Host': 'european-lottery-api.p.rapidapi.com', 'X-RapidAPI-Key': apiKey };
 
   try {
-    // 1. Get List of Dates to find the TRUE latest draw
-    const datesRes = await fetch(`https://european-lottery-api.p.rapidapi.com/${selectedLotto}/dates`, { headers });
-    const dates = await datesRes.json();
+  // 1. Fetch the full history (usually 20-50 draws)
+  // This bypasses 'latest' and 'dates' and goes straight to the data records
+  const historyRes = await fetch(`https://european-lottery-api.p.rapidapi.com/${selectedLotto}/results?limit=50`, { headers });
+  const historyData = await historyRes.json();
 
-    if (dates && dates.length > 0) {
-      const realLatestDate = dates[0];
+  if (historyData && historyData.length > 0) {
+    // 2. We treat the FIRST item in the history as our "Latest"
+    const realLatestDraw = historyData[0]; 
+    
+    // 3. Calculate Stats based on the rest of the history
+    const stats = calculateLottoStats(historyData, currentData.mainCount);
 
-      // 2. Fetch specific results (Bypassing the stuck /latest cache)
-      const drawRes = await fetch(`https://european-lottery-api.p.rapidapi.com/${selectedLotto}/draw/${realLatestDate}`, { headers });
-      const drawData = await drawRes.json();
-
-      // 3. Get History for Hot/Cold stats
-      const historyRes = await fetch(`https://european-lottery-api.p.rapidapi.com/${selectedLotto}/results?limit=50`, { headers });
-      const historyData = await historyRes.json();
-      
-      const stats = calculateLottoStats(historyData, currentData.mainCount);
-
-      if (drawData && drawData.results) {
-        setLottoData(prev => ({
-          ...prev,
-          [selectedLotto]: {
-            ...prev[selectedLotto],
-            mostDrawn: drawData.results.slice(0, currentData.mainCount),
-            extraResults: drawData.results.slice(currentData.mainCount),
-            lastDrawDate: drawData.date,
-            hotNumbers: stats.hot,
-            coldNumbers: stats.cold,
-            overdueNumbers: stats.overdue
-          }
-        }));
-        syncedMarkets.current.add(selectedLotto);
+    setLottoData(prev => ({
+      ...prev,
+      [selectedLotto]: {
+        ...prev[selectedLotto],
+        mostDrawn: realLatestDraw.results.slice(0, currentData.mainCount),
+        extraResults: realLatestDraw.results.slice(currentData.mainCount),
+        lastDrawDate: realLatestDraw.date, // This will show us the real date in the DB
+        hotNumbers: stats.hot,
+        coldNumbers: stats.cold,
+        overdueNumbers: stats.overdue
       }
-    }
-    setLastUpdated(new Date().toLocaleTimeString());
-  } catch (err) { 
+    }));
+    syncedMarkets.current.add(selectedLotto);
+  }
+  setLastUpdated(new Date().toLocaleTimeString());
+} catch (err) { 
     setError(err.message); 
   } finally {
     setTimeout(() => { setIsSyncing(false); syncInProgress.current = false; }, 1000);
